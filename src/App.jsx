@@ -62,7 +62,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 to-violet-900 text-white">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 to-violet-900 text-white relative">
       <Header />
       <div className="flex-1 overflow-y-auto p-4">
         <OutputBox messages={messages} />
@@ -70,6 +70,14 @@ function App() {
       <div className="p-3 bg-gray-900">
         <InputBox onSend={handleUserInput} />
       </div>
+      {/* Floating Home Button */}
+      <button
+        className="floating-home-btn"
+        onClick={() => setMessages([])}
+        title="Reset Chat"
+      >
+        🏠
+      </button>
     </div>
   );
 }

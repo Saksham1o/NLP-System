@@ -6,19 +6,20 @@ function Header() {
   return (
     <header
       style={{
-        background: "#0f172a",
-        padding: "16px 40px",
+        position: "sticky",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         display: "flex",
-        alignItems: "center",
         justifyContent: "space-between",
+        alignItems: "center",
+        padding: "16px 40px",
+        background: "rgba(15, 23, 42, 0.8)",  // Semi-transparent
+        backdropFilter: "blur(8px)",          // Blur effect
         borderBottom: "1px solid rgba(255,255,255,0.1)",
         fontFamily: "Sora, sans-serif",
-        position: "fixed",         
-        top: 0,                    
-        left: 0,                   
-        right: 0,                  
-        zIndex: 100                
-  }}
+    }}
     >
       {/* Logo / Title */}
       <h1
