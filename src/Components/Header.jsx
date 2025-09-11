@@ -1,7 +1,13 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function Header() {
-  const navItems = ["Home", "Appointments", "Reminders", "To-Do Tasks"];
+  const navItems = [
+    { label: "Home", path: "/" },
+    { label: "Appointments", path: "/" },
+    { label: "Reminders", path: "/" },
+    { label: "To-Do Tasks", path: "/" },
+  ];
 
   return (
     <header
@@ -15,13 +21,12 @@ function Header() {
         justifyContent: "space-between",
         alignItems: "center",
         padding: "16px 40px",
-        background: "rgba(15, 23, 42, 0.8)",  // Semi-transparent
-        backdropFilter: "blur(8px)",          // Blur effect
+        background: "rgba(15, 23, 42, 0.8)",
+        backdropFilter: "blur(8px)",
         borderBottom: "1px solid rgba(255,255,255,0.1)",
         fontFamily: "Sora, sans-serif",
-    }}
+      }}
     >
-      {/* Logo / Title */}
       <h1
         style={{
           color: "#a78bfa",
@@ -32,12 +37,11 @@ function Header() {
       >
         AutoFlow AI
       </h1>
-
-      {/* Navigation */}
       <nav style={{ display: "flex", gap: "24px" }}>
         {navItems.map((item, idx) => (
-          <span
+          <Link
             key={idx}
+            to={item.path}
             className="header-nav-item"
             style={{
               color: "#e5e7eb",
@@ -45,16 +49,19 @@ function Header() {
               fontSize: "15px",
               cursor: "pointer",
               transition: "color 0.3s",
-              position: "relative", // Needed for pseudo-element
-              padding: "2px 0"
+              position: "relative",
+              padding: "2px 0",
+              textDecoration: "none",
             }}
             onMouseEnter={(e) => (e.target.style.color = "#a78bfa")}
             onMouseLeave={(e) => (e.target.style.color = "#e5e7eb")}
           >
-            {item}
-          </span>
+            {item.label}
+          </Link>
         ))}
-        <button className="get-started-btn">Get Started</button>
+        <Link to="/signup">
+          <button className="get-started-btn">Signup</button>
+        </Link>
       </nav>
     </header>
   );
