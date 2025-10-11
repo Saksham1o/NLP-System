@@ -1,33 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
-import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  signInAnonymously,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
-import { getFirestore, setLogLevel } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD0moD_84jGNs090Y4N6HnUA3PXV3BQ3NA",
-  authDomain: "nlp-d-c9784.firebaseapp.com",
-  projectId: "nlp-d-c9784",
-  storageBucket: "nlp-d-c9784.appspot.com",
-  messagingSenderId: "1076330002056",
-  appId: "1:1076330002056:web:afcb019178a9c2ec0e913d",
-  measurementId: "G-75SKM2BZ0E",
-};
-
-const Signin = () => {
+const Signin = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [userId, setUserId] = useState("");
+  const navigate = useNavigate();
 
-  const authRef = useRef(null);
-  const dbRef = useRef(null);
-
-  const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+  const styles = `     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     .glass-card {
       background: rgba(255, 255, 255, 0.12);
       backdrop-filter: blur(16px);
@@ -107,38 +88,36 @@ const Signin = () => {
   `;
 
   useEffect(() => {
-    const app = initializeApp(firebaseConfig);
-    authRef.current = getAuth(app);
-    dbRef.current = getFirestore(app);
-    setLogLevel("debug");
-    signInAnonymously(authRef.current).catch(() => {});
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUserId(parsedUser.uid || "");
+        setStatusMessage(`Welcome back, ${parsedUser.email}`);
+      } catch {
+        // ignore parse errors
+      }
+    }
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    try {
-      if (authRef.current) {
-        const userCredential = await signInWithEmailAndPassword(
-          authRef.current,
-          email,
-          password
-        );
-        const user = userCredential.user;
-        setUserId(user.uid);
-        setStatusMessage("Login successful! Welcome back.");
-      } else {
-        setStatusMessage("Firebase is not initialized.");
+    if (email && password) {
+      const fakeUser = { uid: Date.now().toString(), email };
+      // set localStorage
+      localStorage.setItem("user", JSON.stringify(fakeUser));
+      setUserId(fakeUser.uid);
+      setStatusMessage("Login successful! Welcome back.");
+
+      // Inform App that login happened so it can update its auth state
+      if (typeof onLogin === "function") {
+        onLogin(fakeUser);
       }
-    } catch (error) {
-      let errorMessage = "Login failed. Please try again.";
-      if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password.";
-      } else if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with that email.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Please enter a valid email address.";
-      }
-      setStatusMessage(errorMessage);
+
+      // navigate to protected home route without reloading the page
+      navigate("/");
+    } else {
+      setStatusMessage("Please enter both email and password.");
     }
   };
 
@@ -154,27 +133,27 @@ const Signin = () => {
         padding: "20px",
       }}
     >
-      <style>{styles}</style>
+      {" "}
+      <style>{styles}</style>{" "}
       <div className="glass-card">
+        {" "}
         <div className="logo">
-          <svg
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          {" "}
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {" "}
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
               d="M13 10V3L4 14h7v7l9-11h-7z"
-            />
-          </svg>
-          <h1 className="title">AutoFlow AI</h1>
-        </div>
+            />{" "}
+          </svg>{" "}
+          <h1 className="title">AutoFlow AI</h1>{" "}
+        </div>{" "}
         <p className="subtitle">
-          Log in to your account to use the most powerful natural
-          language automation platform.
-        </p>
+          Log in to your account to use the most powerful natural language
+          automation platform.{" "}
+        </p>{" "}
         <form onSubmit={handleLogin}>
           <input
             type="email"
@@ -189,18 +168,16 @@ const Signin = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />
+          />{" "}
           <button type="submit" className="glow-button">
-            Get Started
-          </button>
+            Get Started{" "}
+          </button>{" "}
         </form>
         {statusMessage && (
-          <p style={{ color: "#e5e7eb", marginTop: "16px" }}>
-            {statusMessage}
-          </p>
-        )}
-        {userId && <p className="user-id">User ID: {userId}</p>}
-      </div>
+          <p style={{ color: "#e5e7eb", marginTop: "16px" }}>{statusMessage}</p>
+        )} 
+        {userId && <p className="user-id">User ID: {userId}</p>}{" "}
+      </div>{" "}
     </div>
   );
 };

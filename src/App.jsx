@@ -1,32 +1,12 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import InputBox from "./Components/InputBox";
-import OutputBox from "./Components/OutputBox";
-import Header from "./Components/Header";
-import Signup from "./Components/Singup";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Signup from "./Components/Signup";
 import Signin from "./Components/Signin";
+import Emergency from "./Pages/Emergency";
 import OpenAI from "openai";
-
-function MainChat({ messages, setMessages, handleUserInput }) {
-  return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 to-violet-900 text-white relative">
-      <Header />
-      <div className="flex-1 overflow-y-auto p-4">
-        <OutputBox messages={messages} />
-      </div>
-      <div className="p-3 bg-gray-900">
-        <InputBox onSend={handleUserInput} />
-      </div>
-      <button
-        className="floating-home-btn"
-        onClick={() => setMessages([])}
-        title="Reset Chat"
-      >
-        🏠
-      </button>
-    </div>
-  );
-}
+import MyTask from "./Pages/Mytasks";
+import Setting from "./Pages/Setting";
+import Home from "./Pages/Home";
 
 function App() {
   const openai = new OpenAI({
@@ -35,66 +15,218 @@ function App() {
   });
 
   const [messages, setMessages] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [bookingStep, setBookingStep] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [tempAppointment, setTempAppointment] = useState({});
 
-  const handleUserInput = async (text) => {
-    setMessages((prev) => [...prev, { sender: "user", text }]);
-    const isAppointment = /appointment|book|schedule|doctor|clinic/i.test(text);
+  // auth
+  const getStoredUser = () => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && parsed.email ? parsed : null;
+    } catch {
+      return null;
+    }
+  };
 
-    if (isAppointment) {
-      const steps = [
-        "✅ Finding nearby clinics",
-        "✅ Checking available slots",
-        "✅ Booking appointment",
-        "✅ Adding to calendar",
-        "✅ Monitoring earlier slots",
-        "🎉 Thank you! Your task has been completed successfully.",
-        "📧 A confirmation email with all details has been sent to you.",
-      ];
-      steps.forEach((step, i) => {
-        setTimeout(() => {
-          setMessages((prev) => [...prev, { sender: "system", text: step }]);
-        }, (i + 1) * 1500);
-      });
-    } else {
-      try {
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: text }],
-        });
-        const aiReply =
-          response.choices?.[0]?.message?.content ||
-          "⚠️ Sorry, I couldn’t generate a reply.";
-        setMessages((prev) => [...prev, { sender: "system", text: aiReply }]);
-      } catch (error) {
-        console.error(error);
+  const [user, setUser] = useState(() => getStoredUser());
+  const isAuthenticated = !!user;
+
+  const handleLogin = (userObj) => {
+    localStorage.setItem("user", JSON.stringify(userObj));
+    setUser(userObj);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
+  // --- Chat logic unchanged ---
+  const addAppointmentFromChat = (newAppointment) => {
+    setAppointments((prev) => [...prev, { ...newAppointment, id: Date.now() }]);
+  };
+
+  const checkIntent = (text) => {
+    const bookingPattern =
+      /\b(book|schedule)\s+(an?\s+)?(appointment|meeting)\s+(to|with)?\s*doctor\b/i;
+    if (bookingPattern.test(text)) return "BOOK_APPOINTMENT";
+    return "GENERAL_QUERY";
+  };
+
+  const handleBookingFlow = (text) => {
+    if (bookingStep === null) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "system", text: "✅ Finding nearby clinics..." },
+      ]);
+      setTimeout(() => {
+        const clinicOptions = [
+          "🏥 City Hospital",
+          "🏥 Green Valley Clinic",
+          "🏥 Sunrise Health Center",
+        ];
         setMessages((prev) => [
           ...prev,
           {
             sender: "system",
-            text: "❌ AI service is unavailable. Please try again later.",
+            text: "Please select a clinic:",
+            options: clinicOptions,
           },
         ]);
-      }
+        setBookingStep("SELECT_CLINIC");
+        setTempAppointment({ title: "Doctor's Appointment" });
+      }, 1000);
+    } else if (bookingStep === "SELECT_CLINIC") {
+      setTempAppointment((prev) => ({ ...prev, location: text }));
+      setMessages((prev) => [
+        ...prev,
+        { sender: "system", text: "✅ Checking available slots..." },
+      ]);
+      setTimeout(() => {
+        const slots = [
+          "📅 Sep 12, 10:00 AM",
+          "📅 Sep 12, 2:30 PM",
+          "📅 Sep 13, 11:00 AM",
+        ];
+        setMessages((prev) => [
+          ...prev,
+          { sender: "system", text: "Available slots:", options: slots },
+        ]);
+        setBookingStep("SELECT_SLOT");
+      }, 1000);
+    } else if (bookingStep === "SELECT_SLOT") {
+      const [date, time] = text.replace("📅", "").trim().split(", ");
+      setMessages((prev) => [
+        ...prev,
+        { sender: "system", text: "✅ Adding to calendar..." },
+      ]);
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "system", text: "🎉 Appointment confirmed!" },
+          {
+            sender: "system",
+            text: "📧 Confirmation email sent with details.",
+          },
+        ]);
+        addAppointmentFromChat({ ...tempAppointment, date, time });
+        setBookingStep(null);
+        setTempAppointment({});
+      }, 1000);
+    }
+  };
+
+  const handleOptionSelect = (option) => {
+    setMessages((prev) => [
+      ...prev,
+      { sender: "user", text: option },
+    ]);
+    handleBookingFlow(option);
+  };
+
+  const handleDeleteAppointment = (id) => {
+    setAppointments((prev) => prev.filter((appt) => appt.id !== id));
+  };
+
+  const handleUserInput = async (text) => {
+    setMessages((prev) => [...prev, { sender: "user", text }]);
+    const intent = checkIntent(text);
+    if (bookingStep !== null || intent === "BOOK_APPOINTMENT") {
+      handleBookingFlow(text);
+      return;
+    }
+    const loadingId = `loading-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      { id: loadingId, sender: "system", type: "loading" },
+    ]);
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: text }],
+      });
+      const aiReply =
+        response.choices?.[0]?.message?.content ||
+        "⚠️ Sorry, couldn’t generate a reply.";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === loadingId ? { sender: "system", text: aiReply } : m
+        )
+      );
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === loadingId
+            ? {
+                sender: "system",
+                text: "❌ AI service unavailable.",
+              }
+            : m
+        )
+      );
     }
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <MainChat
-              messages={messages}
-              setMessages={setMessages}
-              handleUserInput={handleUserInput}
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Home
+            activeChat={activeChat}
+            messages={messages}
+            setMessages={setMessages}
+            handleUserInput={handleUserInput}
+            handleOptionSelect={handleOptionSelect}
+            chats={chats}
+            setChats={setChats}
+            setActiveChat={setActiveChat}
+            handleLogout={handleLogout}
+            isAuthenticated={isAuthenticated}
+            user={user}
+          />
+        }
+      />
+      <Route path="/signup" element={<Signup />} />
+      <Route
+        path="/signin"
+        element={<Signin onLogin={handleLogin} user={user} />}
+      />
+      <Route
+        path="/mytasks"
+        element={
+          isAuthenticated ? (
+            <MyTask
+              appointments={appointments}
+              handleDeleteAppointment={handleDeleteAppointment}
             />
-          }
-        />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/signin" element={<Signin />} />
-      </Routes>
-    </Router>
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          isAuthenticated ? (
+            <Setting handleLogout={handleLogout} />
+          ) : (
+            <Navigate to="/signin" replace />
+          )
+        }
+      />
+      <Route
+        path="/emergency"
+        element={
+          isAuthenticated ? <Emergency /> : <Navigate to="/signin" replace />
+        }
+      />
+    </Routes>
   );
 }
 

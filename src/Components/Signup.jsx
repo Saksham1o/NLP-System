@@ -1,18 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, setLogLevel } from "firebase/firestore";
-
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyD0moD_84jGNs090Y4N6HnUA3PXV3BQ3NA",
-  authDomain: "nlp-d-c9784.firebaseapp.com",
-  projectId: "nlp-d-c9784",
-  storageBucket: "nlp-d-c9784.appspot.com",
-  messagingSenderId: "1076330002056",
-  appId: "1:1076330002056:web:afcb019178a9c2ec0e913d",
-  measurementId: "G-75SKM2BZ0E",
-};
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -20,10 +7,6 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [preferredService, setPreferredService] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const [userId, setUserId] = useState("");
-
-  const authRef = useRef(null);
-  const dbRef = useRef(null);
 
   const styles = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -98,11 +81,6 @@ const Signup = () => {
       color: #e5e7eb;
       margin-bottom: 24px;
     }
-    .user-id {
-      font-size: 0.85rem;
-      margin-top: 16px;
-      color: #e5e7eb;
-    }
     .login-text {
       margin-top: 1rem;
       font-size: 0.85rem;
@@ -120,23 +98,29 @@ const Signup = () => {
     }
   `;
 
-  useEffect(() => {
-    const app = initializeApp(firebaseConfig);
-    authRef.current = getAuth(app);
-    dbRef.current = getFirestore(app);
-    setLogLevel("debug");
-    signInAnonymously(authRef.current).catch(() => {});
-  }, []);
-
-  const handleSignUp = async (e) => {
+  const handleSignUp = (e) => {
     e.preventDefault();
-    try {
-      const userCredential = await createUserWithEmailAndPassword(authRef.current, email, password);
-      setUserId(userCredential.user.uid);
-      setStatusMessage("Sign up successful! Welcome.");
-    } catch (error) {
-      setStatusMessage("Sign up failed. " + error.message);
-    }
+    setStatusMessage("Simulating sign-up...");
+
+    setTimeout(() => {
+      console.log("Collected Sign Up Data:", {
+        name,
+        email,
+        preferredService,
+      });
+      setName("");
+      setEmail("");
+      setPassword("");
+      setPreferredService("");
+      setStatusMessage(`Sign up successful for ${email}! (Simulated)`);
+      // Clear any old login data to avoid redirect bug
+      localStorage.removeItem("user");
+    }, 1500);
+  };
+
+  const handleLoginClick = () => {
+    // Clear any stored user before navigating
+    localStorage.removeItem("user");
   };
 
   return (
@@ -154,11 +138,7 @@ const Signup = () => {
       <style>{styles}</style>
       <div className="glass-card">
         <div className="logo">
-          <svg
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -209,9 +189,11 @@ const Signup = () => {
           </button>
         </form>
         {statusMessage && <p className="status">{statusMessage}</p>}
-        {userId && <p className="user-id">User ID: {userId}</p>}
         <p className="login-text">
-          Already have an account? <a href="/signin">Log in here</a>
+          Already have an account?{" "}
+          <Link to="/signin" onClick={handleLoginClick}>
+            Log in here
+          </Link>
         </p>
       </div>
     </div>

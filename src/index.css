@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   margin: 0;
   padding: 0;
@@ -5,8 +9,26 @@
 }
 
 body {
-  background-color: #0f172a;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(
+    135deg,
+    #0d0d0d 0%,   /* deep black */
+    #1a1a2e 25%,  /* midnight blue */
+    #16213e 50%,  /* darker blue */
+    #1a1a2e 75%,  /* back to midnight */
+    #0d0d0d 100%  /* deep black */
+  );
+  min-height: 100vh;
+}
+
+
+
+.dark body {
+  background: linear-gradient(135deg, 
+    oklch(0.08 0.02 280) 0%, 
+    oklch(0.05 0.05 320) 25%, 
+    oklch(0.02 0.08 200) 50%, 
+    oklch(0.05 0.05 280) 75%, 
+    oklch(0.08 0.02 320) 100%);
 }
 
 .chatbox-container {
@@ -185,4 +207,29 @@ body {
 .floating-home-btn:hover {
   transform: scale(1.1);
   filter: brightness(1.2);
+}
+
+/* tailwind.css */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;     
+}
+
+#disclaimer {
+  position: fixed;
+  bottom: 8px;
+  left: 4rem;
+  right: 1rem;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+  pointer-events: none;
+  transition: left 0.3s ease;
+}
+
+.group:hover ~ #disclaimer {
+  left: 16rem;
 }

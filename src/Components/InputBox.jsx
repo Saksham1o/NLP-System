@@ -20,46 +20,57 @@ function InputBox({ onSend }) {
   };
 
   return (
-    <form className="chatbox-input-area" onSubmit={handleSubmit}>
-      {/* Plus icon for upload */}
-      <button
-        type="button"
-        className="chatbox-upload-btn"
-        onClick={() => fileInputRef.current.click()}
-        aria-label="Upload"
+    <div className="bg-gray-900 p-3">
+      <form
+        className="chatbox-input-area flex items-center"
+        onSubmit={handleSubmit}
       >
-        <svg
-          width="32"
-          height="32"
-          fill="none"
-          stroke="#a78bfa"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        {/* Plus icon for upload */}
+        <button
+          type="button"
+          className="chatbox-upload-btn mr-2"
+          onClick={() => fileInputRef.current.click()}
+          aria-label="Upload"
         >
-          <circle cx="16" cy="16" r="14" />
-          <line x1="16" y1="10" x2="16" y2="22" />
-          <line x1="10" y1="16" x2="22" y2="16" />
-        </svg>
-      </button>
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-        accept="image/*,application/pdf"
-      />
-      <input
-        className="chatbox-input"
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your message..."
-      />
-      <button className="chatbox-submit-btn" type="submit">
-        &gt;
-      </button>
-    </form>
+          <svg
+            width="28"
+            height="28"
+            fill="none"
+            stroke="#a78bfa"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="14" cy="14" r="12" />
+            <line x1="14" y1="9" x2="14" y2="19" />
+            <line x1="9" y1="14" x2="19" y2="14" />
+          </svg>
+        </button>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+          accept="image/*,application/pdf"
+        />
+
+        <input
+          className="chatbox-input flex-1 px-3 py-2 rounded-md bg-gray-800 text-white outline-none"
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type your message..."
+        />
+
+        <button
+          className="chatbox-submit-btn ml-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md text-white font-bold"
+          type="submit"
+        >
+          &gt;
+        </button>
+      </form>
+    </div>
   );
 }
 
