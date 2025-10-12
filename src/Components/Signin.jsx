@@ -17,7 +17,9 @@ const Signin = ({ onLogin }) => {
         const parsedUser = JSON.parse(storedUser);
         setUserId(parsedUser.uid || "");
         setStatusMessage(`Welcome back, ${parsedUser.email}`);
-      } catch {}
+      } catch {
+        setStatusMessage("Error parsing user data from localStorage.");
+      }
     }
   }, []);
 
